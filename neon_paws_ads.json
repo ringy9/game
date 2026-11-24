@@ -1,7 +1,8 @@
 {
   "schema_version": 1,
-  "config_version": 1,
+  "config_version": 2,
   "_notes": [
+    "V3 (config_version 2): permanent rewarded song unlocks, HOME PLAY-counter interstitial (the only interstitial trigger), AdMob App Open, adaptive AdMob banner on HOME/SHOP, immediate Continue popup with several voluntary continues per attempt, 3-2-1-GO countdown (never under 3 s).",
     "RUNTIME (applied by the game from this file, no rebuild): ads_enabled, test_mode, max_ad_content_rating, refresh_minutes, rewarded.*, providers.admob.enabled, providers.admob.rewarded_id / rewarded_fallback_ids / interstitial_id / banner_id, placements.*.",
     "AdMob unit IDs are accepted only from the same AdMob account as the app ID built into the APK; production units are used only by a build with production_ready = true.",
     "BUILD-TIME: providers.admob.app_id (packaged in the Android manifest). Shown here for reference; changing it here has no effect.",
@@ -9,20 +10,29 @@
     "NEVER put reporting secrets in this public file (Liftoff Reporting API Key, Unity Ads API Key / Organization core ID, ironSource Secret Key / Refresh Token, Mintegral Skey / Secret). Enter them only in the mediation dashboards.",
     "PLATFORM ORDER: mediation.primary is always AdMob (AdMob, Liftoff, Meta, Mintegral). mediation.secondary 'levelplay' (ironSource Ads + Unity Ads) is asked only when AdMob has no ad ready. It stays 'none' here until LevelPlay has passed a real Android device test with test ads.",
     "LEVELPLAY: app_key is initialization-time (read once per app start; a change applies from the next start); rewarded_ad_unit_id / interstitial_ad_unit_id are runtime (the ad object is recreated at the next load). ironSource Ads and Unity Ads are configured only in the LevelPlay dashboard.",
-    "Raise config_version on every edit: the game ignores a file older than the one it already has."
+    "Raise config_version on every edit: the game ignores a file older than the one it already has.",
+    "SAFETY LIMITS IN CODE (a file can't lift them): countdown 3-5 s; revive max_per_attempt 0-10; interstitial interval 1-20, cooldown >= 30 s, min gap after any full-screen ad 30-600 s; app open cooldown >= 60 s; first song always free; no banner and no ad during a song or countdown."
   ],
   "ads_enabled": true,
   "test_mode": true,
   "max_ad_content_rating": "T",
   "mediation": {
     "primary": "admob",
-    "secondary": "none"
+    "secondary": "none",
+    "fallback_enabled": true
   },
-  "refresh_minutes": 10,
+  "refresh_minutes": 0,
   "rewarded": {
     "enabled": true,
     "fallback_enabled": true,
-    "priority": ["admob", "liftoff", "meta", "unity_ads", "ironsource", "mintegral"],
+    "priority": [
+      "admob",
+      "liftoff",
+      "meta",
+      "unity_ads",
+      "ironsource",
+      "mintegral"
+    ],
     "load_timeout_seconds": 8
   },
   "providers": {
@@ -32,7 +42,8 @@
       "rewarded_id": "ca-app-pub-3940256099942544/5224354917",
       "rewarded_fallback_ids": [],
       "interstitial_id": "ca-app-pub-3940256099942544/1033173712",
-      "banner_id": "ca-app-pub-3940256099942544/9214589741"
+      "banner_id": "ca-app-pub-3940256099942544/9214589741",
+      "app_open_id": "ca-app-pub-3940256099942544/9257395921"
     },
     "levelplay": {
       "enabled": false,
@@ -87,11 +98,71 @@
       }
     }
   },
+  "song_unlock": {
+    "permanent": true,
+    "first_song_free": true
+  },
+  "interstitial": {
+    "enabled": true,
+    "trigger": "play_clicks",
+    "interval": 3,
+    "cooldown_seconds": 10,
+    "min_gap_after_fullscreen_seconds": 5
+  },
+  "app_open": {
+    "enabled": true,
+    "provider": "admob",
+    "show_on_cold_start": true,
+    "show_on_resume": true,
+    "cooldown_seconds": 300
+  },
+  "banner": {
+    "enabled": true,
+    "provider": "admob",
+    "screens": [
+      "home",
+      "shop"
+    ],
+    "hide_during_gameplay": true
+  },
+  "continue_game": {
+    "enabled": true,
+    "show_immediately": true,
+    "allow_multiple_revives": true,
+    "max_per_attempt": 3,
+    "cooldown_seconds": 0,
+    "show_no_continue_left": false
+  },
+  "countdown": {
+    "enabled": true,
+    "duration_seconds": 3,
+    "animation": "cinematic_neon",
+    "sound_enabled": true,
+    "reduced_effects": false
+  },
   "placements": {
-    "weekly_character": { "enabled": true, "format": "rewarded" },
-    "song_access": { "enabled": true, "format": "rewarded" },
-    "continue_game": { "enabled": true, "format": "rewarded", "max_per_attempt": 1 },
-    "game_over_interstitial": { "enabled": true, "format": "interstitial", "interval_attempts": 3, "cooldown_seconds": 180 },
-    "home_banner": { "enabled": false, "format": "banner" }
+    "weekly_character": {
+      "enabled": true,
+      "format": "rewarded"
+    },
+    "song_access": {
+      "enabled": true,
+      "format": "rewarded"
+    },
+    "continue_game": {
+      "enabled": true,
+      "format": "rewarded",
+      "max_per_attempt": 3
+    },
+    "game_over_interstitial": {
+      "enabled": true,
+      "format": "interstitial",
+      "interval_attempts": 3,
+      "cooldown_seconds": 180
+    },
+    "home_banner": {
+      "enabled": true,
+      "format": "banner"
+    }
   }
 }
