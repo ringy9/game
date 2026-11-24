@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "config_version": 1,
+  "_notes": [
+    "RUNTIME (applied by the game from this file, no rebuild): ads_enabled, test_mode, max_ad_content_rating, refresh_minutes, rewarded.*, providers.admob.enabled, providers.admob.rewarded_id / rewarded_fallback_ids / interstitial_id / banner_id, placements.*.",
+    "AdMob unit IDs are accepted only from the same AdMob account as the app ID built into the APK; production units are used only by a build with production_ready = true.",
+    "BUILD-TIME: providers.admob.app_id (packaged in the Android manifest). Shown here for reference; changing it here has no effect.",
+    "DASHBOARD ONLY: every 'admob_dashboard' block (Liftoff, Meta, Mintegral: AdMob mediation groups) and 'levelplay_dashboard' block (Unity Ads: LevelPlay SDK Networks; ironSource Ads needs no extra IDs, it uses the LevelPlay app key). The SDKs read these IDs from their mediation dashboards, never from the app. References only; the game records 'enabled' for diagnostics.",
+    "NEVER put reporting secrets in this public file (Liftoff Reporting API Key, Unity Ads API Key / Organization core ID, ironSource Secret Key / Refresh Token, Mintegral Skey / Secret). Enter them only in the mediation dashboards.",
+    "PLATFORM ORDER: mediation.primary is always AdMob (AdMob, Liftoff, Meta, Mintegral). mediation.secondary 'levelplay' (ironSource Ads + Unity Ads) is asked only when AdMob has no ad ready. It stays 'none' here until LevelPlay has passed a real Android device test with test ads.",
+    "LEVELPLAY: app_key is initialization-time (read once per app start; a change applies from the next start); rewarded_ad_unit_id / interstitial_ad_unit_id are runtime (the ad object is recreated at the next load). ironSource Ads and Unity Ads are configured only in the LevelPlay dashboard.",
+    "Raise config_version on every edit: the game ignores a file older than the one it already has."
+  ],
+  "ads_enabled": true,
+  "test_mode": true,
+  "max_ad_content_rating": "T",
+  "mediation": {
+    "primary": "admob",
+    "secondary": "none"
+  },
+  "refresh_minutes": 10,
+  "rewarded": {
+    "enabled": true,
+    "fallback_enabled": true,
+    "priority": ["admob", "liftoff", "meta", "unity_ads", "ironsource", "mintegral"],
+    "load_timeout_seconds": 8
+  },
+  "providers": {
+    "admob": {
+      "enabled": true,
+      "app_id": "ca-app-pub-3940256099942544~3347511713",
+      "rewarded_id": "ca-app-pub-3940256099942544/5224354917",
+      "rewarded_fallback_ids": [],
+      "interstitial_id": "ca-app-pub-3940256099942544/1033173712",
+      "banner_id": "ca-app-pub-3940256099942544/9214589741"
+    },
+    "levelplay": {
+      "enabled": false,
+      "app_key": "",
+      "rewarded_ad_unit_id": "",
+      "interstitial_ad_unit_id": ""
+    },
+    "liftoff": {
+      "enabled": true,
+      "platform": "admob",
+      "integration": "",
+      "admob_dashboard": {
+        "app_id": "",
+        "rewarded_reference_id": "",
+        "interstitial_reference_id": ""
+      }
+    },
+    "meta": {
+      "enabled": true,
+      "platform": "admob",
+      "integration": "bidding",
+      "admob_dashboard": {
+        "rewarded_placement_id": "",
+        "interstitial_placement_id": ""
+      }
+    },
+    "unity_ads": {
+      "enabled": true,
+      "platform": "levelplay",
+      "levelplay_dashboard": {
+        "game_id": "",
+        "rewarded_placement_id": "",
+        "interstitial_placement_id": ""
+      }
+    },
+    "ironsource": {
+      "enabled": true,
+      "platform": "levelplay",
+      "levelplay_dashboard": {}
+    },
+    "mintegral": {
+      "enabled": true,
+      "platform": "admob",
+      "integration": "",
+      "admob_dashboard": {
+        "app_id": "",
+        "app_key": "",
+        "rewarded_placement_id": "",
+        "rewarded_ad_unit_id": "",
+        "interstitial_placement_id": "",
+        "interstitial_ad_unit_id": ""
+      }
+    }
+  },
+  "placements": {
+    "weekly_character": { "enabled": true, "format": "rewarded" },
+    "song_access": { "enabled": true, "format": "rewarded" },
+    "continue_game": { "enabled": true, "format": "rewarded", "max_per_attempt": 1 },
+    "game_over_interstitial": { "enabled": true, "format": "interstitial", "interval_attempts": 3, "cooldown_seconds": 180 },
+    "home_banner": { "enabled": false, "format": "banner" }
+  }
+}
