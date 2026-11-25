@@ -1,27 +1,44 @@
 {
   "schema_version": 1,
-  "config_version": 2,
+  "config_version": 3,
   "_notes": [
-    "V3 (config_version 2): permanent rewarded song unlocks, HOME PLAY-counter interstitial (the only interstitial trigger), AdMob App Open, adaptive AdMob banner on HOME/SHOP, immediate Continue popup with several voluntary continues per attempt, 3-2-1-GO countdown (never under 3 s).",
-    "RUNTIME (applied by the game from this file, no rebuild): ads_enabled, test_mode, max_ad_content_rating, refresh_minutes, rewarded.*, providers.admob.enabled, providers.admob.rewarded_id / rewarded_fallback_ids / interstitial_id / banner_id, placements.*.",
-    "AdMob unit IDs are accepted only from the same AdMob account as the app ID built into the APK; production units are used only by a build with production_ready = true.",
-    "BUILD-TIME: providers.admob.app_id (packaged in the Android manifest). Shown here for reference; changing it here has no effect.",
-    "DASHBOARD ONLY: every 'admob_dashboard' block (Liftoff, Meta, Mintegral: AdMob mediation groups) and 'levelplay_dashboard' block (Unity Ads: LevelPlay SDK Networks; ironSource Ads needs no extra IDs, it uses the LevelPlay app key). The SDKs read these IDs from their mediation dashboards, never from the app. References only; the game records 'enabled' for diagnostics.",
-    "NEVER put reporting secrets in this public file (Liftoff Reporting API Key, Unity Ads API Key / Organization core ID, ironSource Secret Key / Refresh Token, Mintegral Skey / Secret). Enter them only in the mediation dashboards.",
-    "PLATFORM ORDER: mediation.primary is always AdMob (AdMob, Liftoff, Meta, Mintegral). mediation.secondary 'levelplay' (ironSource Ads + Unity Ads) is asked only when AdMob has no ad ready. It stays 'none' here until LevelPlay has passed a real Android device test with test ads.",
-    "LEVELPLAY: app_key is initialization-time (read once per app start; a change applies from the next start); rewarded_ad_unit_id / interstitial_ad_unit_id are runtime (the ad object is recreated at the next load). ironSource Ads and Unity Ads are configured only in the LevelPlay dashboard.",
+    "V4 (config_version 3): SafeMode kill switches, full CanShowInterstitial (initial session delay, PLAY interval, minimum interval, gap after a rewarded ad, prep timeout, retry back-off), per-screen banners with position and adaptive size, App Open minimum background time, optional Rewarded AdBreak and AdStretch (both off), optional regional eligibility for the secondary platform (off), No-Ads entitlement interface (no purchase in this build).",
+    "OMITTED = UNCHANGED: a setting missing from this file keeps the game's current value; leaving one out never switches another format on.",
+    "RUNTIME (applied from this file, no rebuild): ads_enabled, test_mode, max_ad_content_rating, refresh_minutes, safe_mode.*, mediation.*, rewarded.*, providers.admob rewarded_id / rewarded_fallback_ids / interstitial_id / banner_id / app_open_id, providers.levelplay rewarded/interstitial ad unit ids, song_unlock.*, interstitial.*, app_open.*, banner.*, continue_game.*, countdown.*, ad_break.*, ad_stretch.*.",
+    "INITIALIZATION-TIME (read once per app start): providers.levelplay.app_key, mediation.secondary (LevelPlay is started at launch only when it is enabled).",
+    "BUILD-TIME: providers.admob.app_id (packaged in the Android manifest). Shown for reference; changing it here has no effect.",
+    "AdMob unit IDs are accepted only from the same AdMob account as the app ID built into the APK; production units are used only by a build with production_ready = true. Test mode stays on.",
+    "DASHBOARD ONLY: every 'admob_dashboard' block (Liftoff, Meta, Mintegral) and 'levelplay_dashboard' block (Unity Ads; ironSource Ads uses the LevelPlay app key). References only.",
+    "NEVER put secrets in this public file (reporting API keys, secret keys, refresh tokens, skeys). The game warns if it finds one.",
+    "PLATFORM ORDER: mediation.primary is always AdMob. mediation.secondary 'levelplay' is asked only when AdMob has no ad ready, at most one ad per request, and only for operational failures (no fill, timeout); it stays 'none' until LevelPlay has passed a real Android device test. mediation.regional (off) can limit the secondary to listed countries, from the device's region setting, never its location.",
+    "SAFE MODE: safe_mode.enabled blocks every new ad request; disable_* blocks one format. Earned rewards are never taken back.",
+    "AD BREAK vs INTERSTITIAL: 'ad_break' here is the optional REWARDED offer (+Neon Fish) on Results, off by default; the interstitial 'AD BREAK' card is part of interstitial.*. Rewards: fish only in this build.",
+    "AD STRETCH (off): reduction only; it can lengthen the interstitial interval and raise the PLAY count within its range, never below interstitial.minimum_interval_seconds / play_interval. Session signals only, no age or profiling.",
+    "NO ADS: entitlements come only from a verified purchase; this build has none and the file can't grant one.",
     "Raise config_version on every edit: the game ignores a file older than the one it already has.",
-    "SAFETY LIMITS IN CODE (a file can't lift them): countdown 3-5 s; revive max_per_attempt 0-10; interstitial interval 1-20, cooldown >= 30 s, min gap after any full-screen ad 30-600 s; app open cooldown >= 60 s; first song always free; no banner and no ad during a song or countdown."
+    "SAFETY LIMITS IN CODE (a file can't lift them): countdown 3-5 s; revive 0-10; interstitial play_interval 1-20, minimum interval >= 30 s, initial delay >= 30 s, rewarded gap >= 15 s, max wait 3-10 s, retry >= 5 s; min gap after any full-screen ad 30-600 s; app open cooldown >= 60 s; banners never on gameplay, continue, transition or results; first song always free."
   ],
   "ads_enabled": true,
   "test_mode": true,
   "max_ad_content_rating": "T",
+  "safe_mode": {
+    "enabled": false,
+    "disable_rewarded": false,
+    "disable_interstitial": false,
+    "disable_banner": false,
+    "disable_app_open": false,
+    "disable_ad_break": false
+  },
   "mediation": {
     "primary": "admob",
     "secondary": "none",
-    "fallback_enabled": true
+    "fallback_enabled": true,
+    "regional": {
+      "enabled": false,
+      "secondary_countries": []
+    }
   },
-  "refresh_minutes": 0,
+  "refresh_minutes": 10,
   "rewarded": {
     "enabled": true,
     "fallback_enabled": true,
@@ -33,7 +50,8 @@
       "ironsource",
       "mintegral"
     ],
-    "load_timeout_seconds": 8
+    "load_timeout_seconds": 8,
+    "preload_enabled": true
   },
   "providers": {
     "admob": {
@@ -105,16 +123,21 @@
   "interstitial": {
     "enabled": true,
     "trigger": "play_clicks",
-    "interval": 3,
-    "cooldown_seconds": 10,
-    "min_gap_after_fullscreen_seconds": 5
+    "play_interval": 3,
+    "minimum_interval_seconds": 180,
+    "initial_delay_seconds": 30,
+    "rewarded_gap_seconds": 15,
+    "min_gap_after_fullscreen_seconds": 60,
+    "max_wait_seconds": 10,
+    "retry_delay_seconds": 15
   },
   "app_open": {
     "enabled": true,
     "provider": "admob",
     "show_on_cold_start": true,
     "show_on_resume": true,
-    "cooldown_seconds": 300
+    "cooldown_seconds": 300,
+    "minimum_background_seconds": 1
   },
   "banner": {
     "enabled": true,
@@ -123,6 +146,8 @@
       "home",
       "shop"
     ],
+    "position": "bottom",
+    "adaptive_size": true,
     "hide_during_gameplay": true
   },
   "continue_game": {
@@ -139,6 +164,26 @@
     "animation": "cinematic_neon",
     "sound_enabled": true,
     "reduced_effects": false
+  },
+  "ad_break": {
+    "enabled": false,
+    "song_count": 5,
+    "fish_reward_amount": 10,
+    "cooldown_seconds": 600,
+    "rewards": [
+      "fish"
+    ]
+  },
+  "ad_stretch": {
+    "enabled": false,
+    "reduction_only": true,
+    "min_interval_seconds": 180,
+    "max_interval_seconds": 200,
+    "min_games": 3,
+    "max_games": 20
+  },
+  "no_ads": {
+    "purchase_available": false
   },
   "placements": {
     "weekly_character": {
