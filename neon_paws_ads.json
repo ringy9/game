@@ -1,8 +1,13 @@
 {
   "schema_version": 1,
-  "config_version": 3,
+  "config_version": 8,
   "_notes": [
-    "V4 (config_version 3): SafeMode kill switches, full CanShowInterstitial (initial session delay, PLAY interval, minimum interval, gap after a rewarded ad, prep timeout, retry back-off), per-screen banners with position and adaptive size, App Open minimum background time, optional Rewarded AdBreak and AdStretch (both off), optional regional eligibility for the secondary platform (off), No-Ads entitlement interface (no purchase in this build).",
+    "V8.4 (config_version 8; GitHub serves v3; v4-v7 were never published and are included here): everything in V4-V8.3; HOME music is the only music on HOME (the old menu loop is gone) and its card indicator is minimal (a white triangle, or 4 white bars while playing, at the cover's bottom left).",
+    "HOME MUSIC: full songs from their beginning, looping until another song is chosen; a new song is prepared while the current one keeps playing, then a real-time equal-power crossfade (crossfade_duration_seconds, 0.3-4); tapping the playing song changes nothing; the free starter song plays on a first launch, then the last chosen song; after gameplay, the song just played. Adjustable: enabled, autoplay_on_home, remember_selected_song, play_last_gameplay_song_on_return, crossfade_duration_seconds, volume_multiplier (0.1-1 of the player's music volume; volume 0 stays silent), play_icon_size_ratio (0.12-0.22), show_equalizer, show_now_playing, highlight_active_card. The other keys below describe behaviour fixed in code; a different value is refused with a note. Choosing music never counts a PLAY, never shows an ad, never unlocks a song.",
+    "INTERSTITIAL PLACEMENTS: interstitial.placements switches each placement; all of them share ONE cooldown (minimum_interval_seconds), the initial delay, the gap after a rewarded ad, the gap after an App Open (app_open_gap_seconds, >= 30 s) and the gap after any full-screen ad. Any interstitial shown resets the PLAY counter. Never during a song or countdown; never right after a rewarded revive; never on PAUSE or RESUME; never when exiting the app.",
+    "CHARACTER SHOP: fish_purchase_enabled and rewarded_unlock_enabled switch the two unlock ways (one confirmed rewarded ad = the selected character owned for good). price_overrides {character_id: price} must stay inside the character's rarity range (Classic 50-150, Rare 200-400, Epic 500-900, Legendary 1000-1500, Mythic 1800-2500); the starter (lilac) is always free. A file can never remove or grant ownership, and a price change never affects characters already owned.",
+    "STARTUP (runtime; read from the local/cached file at launch, a newly fetched one applies from the next launch): prefer_ads_ready_before_home (wait for the first rewarded load to finish, ready or not), ads_prepare_timeout_seconds (2-15; the whole splash also has a fixed 20 s cap in code), initialize_admob_early (returning players whose earlier consent allows ads start the SDK alongside the consent refresh), app_open_during_splash (the cold-start App Open may show while loading, never over an interactive HOME), preload_banner (loaded hidden during the splash). Code always lets HOME open on timeout and offline; a file can't change that.",
+    "SPLASH: animation_enabled, show_loading_status, reduced_effects (fewer particles, no sparkles or corner equalizers). The bar always shows real progress.",
     "OMITTED = UNCHANGED: a setting missing from this file keeps the game's current value; leaving one out never switches another format on.",
     "RUNTIME (applied from this file, no rebuild): ads_enabled, test_mode, max_ad_content_rating, refresh_minutes, safe_mode.*, mediation.*, rewarded.*, providers.admob rewarded_id / rewarded_fallback_ids / interstitial_id / banner_id / app_open_id, providers.levelplay rewarded/interstitial ad unit ids, song_unlock.*, interstitial.*, app_open.*, banner.*, continue_game.*, countdown.*, ad_break.*, ad_stretch.*.",
     "INITIALIZATION-TIME (read once per app start): providers.levelplay.app_key, mediation.secondary (LevelPlay is started at launch only when it is enabled).",
@@ -129,7 +134,13 @@
     "rewarded_gap_seconds": 15,
     "min_gap_after_fullscreen_seconds": 60,
     "max_wait_seconds": 10,
-    "retry_delay_seconds": 15
+    "retry_delay_seconds": 15,
+    "app_open_gap_seconds": 60,
+    "placements": {
+      "every_play_actions": true,
+      "game_over": true,
+      "pause_to_main_menu": true
+    }
   },
   "app_open": {
     "enabled": true,
@@ -185,6 +196,58 @@
   "no_ads": {
     "purchase_available": false
   },
+  "startup": {
+    "prefer_ads_ready_before_home": true,
+    "ads_prepare_timeout_seconds": 10,
+    "initialize_admob_early": true,
+    "app_open_during_splash": true,
+    "preload_banner": true
+  },
+  "splash": {
+    "animation_enabled": true,
+    "show_loading_status": true,
+    "reduced_effects": false
+  },
+  "character_shop": {
+    "fish_purchase_enabled": true,
+    "rewarded_unlock_enabled": true,
+    "price_overrides": {}
+  },
+  "home_music": {
+    "enabled": true,
+    "full_song_playback": true,
+    "loop": true,
+    "autoplay_on_home": true,
+    "first_free_song_default": true,
+    "remember_selected_song": true,
+    "remember_last_gameplay_song": true,
+    "play_last_gameplay_song_on_return": true,
+    "same_song_tap_action": "keep_playing",
+    "new_song_start_position": "beginning",
+    "keep_current_song_while_loading": true,
+    "autoplay_next": false,
+    "shuffle": false,
+    "play_icon_color": "#FFFFFF",
+    "play_icon_position": "bottom_left",
+    "play_icon_size_ratio": 0.16,
+    "active_icon": "animated_equalizer",
+    "show_equalizer": true,
+    "audio_reactive_equalizer": true,
+    "highlight_active_card": false,
+    "show_now_playing": false,
+    "crossfade_enabled": true,
+    "crossfade_duration_seconds": 1.5,
+    "crossfade_curve": "equal_power",
+    "sync_card_animation": true,
+    "cancel_previous_selection": true,
+    "volume_multiplier": 1.0,
+    "pause_during_ads": true,
+    "resume_after_ads": true,
+    "pause_in_background": true,
+    "show_cover_glow": false,
+    "show_light_sweep": false,
+    "show_music_particles": false
+  },
   "placements": {
     "weekly_character": {
       "enabled": true,
@@ -201,13 +264,19 @@
     },
     "game_over_interstitial": {
       "enabled": true,
-      "format": "interstitial",
-      "interval_attempts": 3,
-      "cooldown_seconds": 180
+      "format": "interstitial"
     },
     "home_banner": {
       "enabled": true,
       "format": "banner"
+    },
+    "pause_menu_interstitial": {
+      "enabled": true,
+      "format": "interstitial"
+    },
+    "shop_character": {
+      "enabled": true,
+      "format": "rewarded"
     }
   }
 }
