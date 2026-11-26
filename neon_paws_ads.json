@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "config_version": 8,
+  "config_version": 9,
   "_notes": [
-    "V8.4 (config_version 8; GitHub serves v3; v4-v7 were never published and are included here): everything in V4-V8.3; HOME music is the only music on HOME (the old menu loop is gone) and its card indicator is minimal (a white triangle, or 4 white bars while playing, at the cover's bottom left).",
+    "V8.5 (config_version 9; GitHub serves v8): App Open lifecycle fix. app_open.minimum_background_seconds 1 -> 30 and the new app_open.min_completed_sessions 3 (no App Open in a player's first three launches, per Google's recommendation). Everything else as v8.",
     "HOME MUSIC: full songs from their beginning, looping until another song is chosen; a new song is prepared while the current one keeps playing, then a real-time equal-power crossfade (crossfade_duration_seconds, 0.3-4); tapping the playing song changes nothing; the free starter song plays on a first launch, then the last chosen song; after gameplay, the song just played. Adjustable: enabled, autoplay_on_home, remember_selected_song, play_last_gameplay_song_on_return, crossfade_duration_seconds, volume_multiplier (0.1-1 of the player's music volume; volume 0 stays silent), play_icon_size_ratio (0.12-0.22), show_equalizer, show_now_playing, highlight_active_card. The other keys below describe behaviour fixed in code; a different value is refused with a note. Choosing music never counts a PLAY, never shows an ad, never unlocks a song.",
     "INTERSTITIAL PLACEMENTS: interstitial.placements switches each placement; all of them share ONE cooldown (minimum_interval_seconds), the initial delay, the gap after a rewarded ad, the gap after an App Open (app_open_gap_seconds, >= 30 s) and the gap after any full-screen ad. Any interstitial shown resets the PLAY counter. Never during a song or countdown; never right after a rewarded revive; never on PAUSE or RESUME; never when exiting the app.",
     "CHARACTER SHOP: fish_purchase_enabled and rewarded_unlock_enabled switch the two unlock ways (one confirmed rewarded ad = the selected character owned for good). price_overrides {character_id: price} must stay inside the character's rarity range (Classic 50-150, Rare 200-400, Epic 500-900, Legendary 1000-1500, Mythic 1800-2500); the starter (lilac) is always free. A file can never remove or grant ownership, and a price change never affects characters already owned.",
@@ -148,7 +148,8 @@
     "show_on_cold_start": true,
     "show_on_resume": true,
     "cooldown_seconds": 300,
-    "minimum_background_seconds": 1
+    "minimum_background_seconds": 30,
+    "min_completed_sessions": 3
   },
   "banner": {
     "enabled": true,
